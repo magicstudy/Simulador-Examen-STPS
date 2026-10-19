@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador de examen: STPS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Literata:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+
+:root{--paper:#fbfcfd;--grid:#e3eaf2;--ink:#1f2a44;--mut:#5d6985;--pen:#2447b8;--penx:#fff;--red:#c8321f;--grn:#2f7d4f;--part:#a15c00;--hl:#fde68a;--line:#c9d3e0;--field:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--paper:#161b26;--grid:#202838;--ink:#e6eaf3;--mut:#9aa6c0;--pen:#8fb0ff;--penx:#10131c;--red:#ff8a78;--grn:#7fd6a0;--part:#f0b95a;--hl:#5a4a12;--line:#34405a;--field:#1c2230}}
+:root[data-theme="dark"]{color-scheme:dark;--paper:#161b26;--grid:#202838;--ink:#e6eaf3;--mut:#9aa6c0;--pen:#8fb0ff;--penx:#10131c;--red:#ff8a78;--grn:#7fd6a0;--part:#f0b95a;--hl:#5a4a12;--line:#34405a;--field:#1c2230}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:17px/1.6 Literata,Georgia,"Times New Roman",serif;background:var(--grid) linear-gradient(var(--paper) 1px,transparent 1px) 0 0/28px 28px}
+.sheet{max-width:720px;margin:24px auto;background:var(--paper);padding:30px 26px 44px 58px;border-left:2px solid color-mix(in srgb,var(--red) 60%,transparent);box-shadow:0 1px 14px rgba(20,30,60,.14)}
+@media (max-width:600px){.sheet{margin:0;padding:22px 16px 40px 30px;box-shadow:none}}
+h1{font-size:1.9rem;line-height:1.2;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 22px}
+:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+label{display:block;font-size:.85rem;color:var(--mut);margin:12px 0 3px}
+input,select,textarea{font:inherit;color:inherit;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+textarea{resize:vertical;min-height:120px}
+.under{border:0;border-bottom:1.5px solid var(--ink);border-radius:0;background:transparent}
+.row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:6px 0 20px}
+@media (max-width:560px){.row{grid-template-columns:1fr;gap:4px}}
+button{font:700 1rem Literata,Georgia,serif;background:var(--pen);color:var(--penx);border:0;border-radius:6px;padding:11px 18px;cursor:pointer}
+button.ghost{background:transparent;color:var(--pen);border:1.5px solid var(--pen)}
+button:disabled{opacity:.5;cursor:progress}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.st{font-size:.9rem;color:var(--mut);margin:8px 0 0;min-height:1.3em}
+.st.err{color:var(--red)}
+.conn{border:1px dashed var(--line);border-radius:6px;padding:10px 14px;margin-bottom:22px}
+.conn summary{cursor:pointer;font-weight:700}
+.conn p{font-size:.9rem;color:var(--mut);margin:8px 0}
+a{color:var(--pen)}
+.drop{display:block;font-size:1rem;color:var(--ink);border:1.5px dashed var(--pen);border-radius:6px;padding:18px 12px;text-align:center;cursor:pointer;margin:0}
+.drop.on{background:var(--hl)}
+.drop input{display:none}
+.q{display:grid;grid-template-columns:3.7rem 1fr;gap:4px;padding:18px 0;border-top:1px solid var(--line)}
+.num{font-weight:700}
+.kind{font-size:.85rem;color:var(--mut);font-style:italic;margin:0}
+.qt{font-weight:700;margin:2px 0 12px;white-space:pre-wrap}
+.opt{display:flex;gap:8px;align-items:baseline;padding:6px 8px;margin:0 0 4px;border-radius:6px;font-size:1rem;color:var(--ink);cursor:pointer}
+.opt:has(input:checked){background:var(--hl)}
+.opt input{width:auto;margin:0}
+.opt.n{cursor:default}
+.opt.c span{background:linear-gradient(transparent 55%,var(--hl) 55%)}
+.opt.w span{color:var(--red);text-decoration:line-through}
+.ruled{border:0;border-radius:0;background:repeating-linear-gradient(transparent,transparent 31px,var(--line) 31px,var(--line) 32px) 0 6px;line-height:32px;padding:0 4px;min-height:132px}
+.mark{display:block;font:600 1.6rem/1 Caveat,"Segoe Print","Bradley Hand",cursive;margin-top:4px}
+.mark.ok{color:var(--grn)}.mark.bad{color:var(--red)}.mark.part{color:var(--part)}
+.score{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin:8px 0 26px}
+.grade{font:600 3.6rem/1 Caveat,"Segoe Print","Bradley Hand",cursive;color:var(--red);border:3px solid var(--red);border-radius:52% 48% 55% 45%/48% 55% 45% 52%;padding:.12em .42em;transform:rotate(-4deg)}
+.score p{margin:0 0 4px}
+.who{margin:0 0 6px}
+.ans{margin:6px 0 0;padding-left:12px;border-left:3px solid var(--line);white-space:pre-wrap;font-size:.95rem}
+.ans b{display:block;font-size:.8rem;color:var(--mut);font-weight:400;font-style:italic}
+.fb{font:600 1.45rem/1.25 Caveat,"Segoe Print","Bradley Hand",cursive;color:var(--red);margin:10px 0 0;transform:rotate(-.5deg)}
+.fb.ok{color:var(--grn)}.fb.part{color:var(--part)}
+[hidden]{display:none!important}
+
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+.types{border:0;padding:0;margin:0 0 14px}
+.types legend{font-size:.85rem;color:var(--mut);padding:0;margin-bottom:4px}
+.chk{display:flex;gap:10px;align-items:center;font-size:1rem;color:var(--ink);margin:8px 0;cursor:pointer}
+.chk input{width:auto}
+.opt.kp{cursor:pointer}
+.opt.kp input{margin-top:0}
+
+</style>
+</head>
+<body>
+<div class="sheet">
+<h1 id="ttl">Simulador de examen</h1>
+<p class="sub" id="desc"></p>
+
+<section id="setup">
+  <div class="row">
+    <div><label for="n">Número de preguntas</label><input class="under" type="number" id="n" min="1" value="8"></div>
+    <div><label for="diff">Dificultad</label><select class="under" id="diff"><option value="0">Mixta</option><option value="1">Fácil</option><option value="2">Media</option><option value="3">Difícil</option></select></div>
+  </div>
+  <fieldset class="types"><legend>Tipo de preguntas</legend>
+    <label class="chk"><input type="checkbox" value="mc" checked> Opción múltiple</label>
+    <label class="chk"><input type="checkbox" value="tf" checked> Verdadero o falso</label>
+    <label class="chk"><input type="checkbox" value="open" checked> Abiertas</label>
+  </fieldset>
+  <p class="st" id="avail"></p>
+  <button id="go">Empezar examen</button>
+</section>
+
+<section id="exam" hidden>
+  <div id="qs"></div>
+  <div class="acts"><button id="deliver">Entregar examen</button><button class="ghost" id="back1">Cancelar</button></div>
+  <div class="st" id="sst"></div>
+</section>
+
+<section id="res" hidden>
+  <div class="score">
+    <span class="grade" id="pct"></span>
+    <div><p id="sum"></p>
+      <div class="acts"><button id="same">Repetir el mismo examen</button><button id="fresh">Examen nuevo, otras preguntas</button><button class="ghost" id="chg">Cambiar ajustes</button></div></div>
+  </div>
+  <div id="rv"></div>
+</section>
+</div>
+
+<script>
+/* ====== BANCO DE PREGUNTAS (lo único que cambia con otro material) ======
+   t: mc | tf | open     d: 1 fácil, 2 media, 3 difícil
+   mc: o (opciones), a (índice correcto)   tf: a (true/false)
+   open: ideal (respuesta modelo), kp (puntos clave: [texto, [raíces de palabras sin tildes]])  */
+const BANK={title:'STPS',intro:'Practica con preguntas hechas a partir de tu material de estudio. Elige cuántas, qué dificultad y qué tipos. Las cifras son de octubre de 2026: confirma siempre el texto vigente en el DOF y en gob.mx/stps.',q:[
+{t:'mc',d:1,q:'¿De qué poder depende la STPS?',o:['Poder Legislativo','Poder Ejecutivo Federal','Poder Judicial','Es un organismo autónomo'],a:1,e:'Es una secretaría de Estado, dependencia del Poder Ejecutivo Federal.'},
+{t:'mc',d:1,q:'¿Qué artículo de la Constitución sustenta la labor de la STPS?',o:['Artículo 27','Artículo 40','Artículo 123','Artículo 527'],a:2,e:'El artículo 123, apartado A.'},
+{t:'mc',d:1,q:'¿Qué artículo de la LOAPF enlista las atribuciones de la STPS?',o:['Artículo 40','Artículo 123','Artículo 291-C','Artículo 1004-A'],a:0,e:'El artículo 40 de la Ley Orgánica de la Administración Pública Federal.'},
+{t:'mc',d:1,q:'¿Qué órgano asesora y defiende gratuitamente a las personas trabajadoras?',o:['CFCRL','CONASAMI','PROFEDET','JFCA'],a:2,e:'La PROFEDET es un órgano desconcentrado de la STPS y su servicio es gratuito.'},
+{t:'mc',d:1,q:'¿Quién fija los salarios mínimos?',o:['La CONASAMI','El IMSS','El CFCRL','El Infonavit'],a:0,e:'Lo hace el Consejo de Representantes de la CONASAMI, que es tripartito.'},
+{t:'mc',d:1,q:'¿Cuál es el salario mínimo general diario de 2026?',o:['$250.00','$315.04','$440.87','$117.31'],a:1,e:'$315.04 diarios. El de la frontera norte es $440.87 y la UMA vale $117.31.'},
+{t:'mc',d:1,q:'¿Cuántas categorías de NOM-STPS hay?',o:['Tres','Cuatro','Cinco','Siete'],a:2,e:'Seguridad, salud, organización, específicas y producto.'},
+{t:'mc',d:1,q:'¿Qué regula la NOM-035?',o:['Ruido','Factores de riesgo psicosocial','Teletrabajo','Iluminación'],a:1,e:'La NOM-037 es la del teletrabajo.'},
+{t:'mc',d:1,q:'¿Qué es la DC-3?',o:['Un tipo de multa','Una constancia que acredita la capacitación recibida','Un registro de sindicatos','Una prima vacacional'],a:1,e:'Es la constancia de competencias o de habilidades laborales.'},
+{t:'mc',d:1,q:'¿Cuántos días de salario es el aguinaldo mínimo?',o:['10 días','12 días','15 días','20 días'],a:2,e:'Mínimo 15 días, pagados antes del 20 de diciembre.'},
+{t:'mc',d:2,q:'¿Qué apartado del artículo 123 aplica la STPS?',o:['Apartado A','Apartado B','Ambos por igual','Ninguno'],a:0,e:'El A cubre a las personas trabajadoras en general; el B, a quienes sirven al Estado.'},
+{t:'mc',d:2,q:'¿Qué organismo concilia en asuntos federales y registra sindicatos y contratos colectivos?',o:['PROFEDET','CFCRL','JFCA','CONASAMI'],a:1,e:'El CFCRL, creado por la reforma de 2019.'},
+{t:'mc',d:2,q:'¿Qué pasa hoy con la JFCA?',o:['Resuelve todos los juicios nuevos','Está en cierre gradual y solo concluye juicios pendientes','Registra sindicatos','Fija el salario mínimo'],a:1,e:'Es la autoridad del sistema anterior.'},
+{t:'mc',d:2,q:'¿Qué multa corresponde a la subcontratación de personal prohibida o sin registro?',o:['50 a 1,500 UMA','250 a 5,000 UMA','50 a 5,000 UMA','2,000 a 50,000 UMA'],a:3,e:'Artículo 1004-C: de 2,000 a 50,000 UMA.'},
+{t:'mc',d:2,q:'¿Quién resuelve hoy los juicios laborales nuevos?',o:['La STPS','Los tribunales laborales del Poder Judicial','El CFCRL','La PROFEDET'],a:1,e:'No dependen de la STPS.'},
+{t:'mc',d:2,q:'¿Cómo se clasifican las inspecciones ordinarias?',o:['Iniciales, periódicas y de comprobación','Solo periódicas','Iniciales y extraordinarias','Por accidente, peligro inminente y denuncia'],a:0,e:'Las extraordinarias son las que se ordenan por accidentes, peligro inminente o denuncias.'},
+{t:'mc',d:2,q:'¿Qué prohíbe la reforma del 23 de abril de 2021?',o:['El trabajo en plataformas','La subcontratación de personal','Las horas extra','El teletrabajo'],a:1,e:'Solo permite servicios u obras especializadas con registro en el REPSE.'},
+{t:'mc',d:2,q:'¿Cuántas horas extra semanales permite la reforma de 2026 y cómo se pagan?',o:['Hasta 9, al doble','Hasta 12, al doble','Hasta 12, al triple','Hasta 15, al doble'],a:1,e:'El tope sube de 9 a 12 por semana, pagadas al doble.'},
+{t:'mc',d:2,q:'¿Qué edades cubre Jóvenes Construyendo el Futuro?',o:['15 a 25 años','18 a 29 años','20 a 35 años','18 a 24 años'],a:1,e:'Jóvenes que no estudian ni trabajan, con capacitación hasta por 12 meses, una sola vez.'},
+{t:'mc',d:2,q:'¿Qué ingreso se requiere para ser reconocido como persona trabajadora subordinada de plataformas (art. 291-C)?',o:['Cualquier ingreso','Ingresos netos mensuales de al menos un salario mínimo mensual de la CDMX','Al menos dos salarios mínimos','Al menos 1,000 UMA'],a:1,e:'Con seguridad social integral.'},
+{t:'mc',d:3,q:'Según el calendario de la reforma, ¿cuántas horas semanales tendrá la jornada máxima en 2028?',o:['48','46','44','40'],a:2,e:'Baja 2 horas cada 1 de enero desde 2027: 46 en 2027, 44 en 2028 y 40 en 2030.'},
+{t:'mc',d:3,q:'Con la UMA 2026 de $117.31, ¿cuánto es la multa mínima por no permitir la inspección (250 UMA)?',o:['$5,865.50','$29,327.50','$234,620.00','$586,550.00'],a:1,e:'250 × $117.31 = $29,327.50.'},
+{t:'mc',d:3,q:'¿En qué consiste el aumento general de 13 % al salario mínimo de 2026?',o:['Solo 13 % por fijación','Un Monto Independiente de Recuperación de $17.01 más 6.5 % por fijación','6.5 % más $17.01 por inflación','Un aumento solo para la frontera norte'],a:1,e:'El +5 % de la frontera norte es solo por fijación.'},
+{t:'mc',d:3,q:'¿Qué cambió en el Reglamento Interior en 2023?',o:['Se creó la Subsecretaría del Trabajo','Se suprimieron la Subsecretaría del Trabajo y la Unidad de Funcionarios Conciliadores, y se creó la Dirección General de Concertación Social','Se creó la PROFEDET','Se creó el CFCRL'],a:1,e:'La reforma fue el 5 de junio de 2023.'},
+{t:'tf',d:1,q:'La STPS diseña y coordina la política laboral federal de México.',a:true,e:'Es la secretaría de Estado encargada de la política laboral federal.'},
+{t:'tf',d:1,q:'La STPS resuelve actualmente los juicios laborales nuevos.',a:false,e:'Los resuelven los tribunales laborales del Poder Judicial.'},
+{t:'tf',d:1,q:'El IMSS es un órgano de la STPS.',a:false,e:'No depende de ella, aunque colaboran.'},
+{t:'tf',d:1,q:'La Constitución incorporó el artículo 123 en 1917.',a:true,e:'Está en la línea del tiempo del material.'},
+{t:'tf',d:1,q:'En 2026 la jornada máxima semanal ya es de 40 horas.',a:false,e:'Sigue en 48 horas; baja de forma gradual desde 2027 hasta 2030.'},
+{t:'tf',d:1,q:'La PROFEDET es un órgano desconcentrado de la STPS.',a:true,e:'Asesora, representa y defiende a las personas trabajadoras.'},
+{t:'tf',d:2,q:'La Ley Federal del Trabajo reglamenta el apartado A del artículo 123.',a:true,e:'El apartado B es el de quienes sirven al Estado.'},
+{t:'tf',d:2,q:'La inspección extraordinaria puede ordenarse tras un accidente.',a:true,e:'Se ordena en cualquier momento por accidentes, peligro inminente o denuncias.'},
+{t:'tf',d:2,q:'La CONASAMI es un organismo descentralizado sectorizado a la STPS.',a:true,e:'Su Consejo de Representantes es tripartito.'},
+{t:'tf',d:2,q:'La primera Ley Federal del Trabajo es de 1970.',a:false,e:'La primera es de 1931; la nueva LFT es de 1970.'},
+{t:'tf',d:2,q:'Las inspecciones periódicas se hacen, por regla general, cada 12 meses.',a:true,e:'Son un tipo de inspección ordinaria.'},
+{t:'tf',d:2,q:'La subcontratación de personal está permitida si la empresa avisa a la STPS.',a:false,e:'Está prohibida; solo se permiten servicios u obras especializadas con registro en el REPSE.'},
+{t:'tf',d:2,q:'El registro de sindicatos y contratos colectivos lo lleva hoy la STPS.',a:false,e:'Lo lleva el CFCRL desde el 3 de noviembre de 2021.'},
+{t:'tf',d:2,q:'La STPS se creó con una reforma del 31 de diciembre de 1940.',a:true,e:'Fue una reforma a la Ley de Secretarías y Departamentos de Estado, con Ávila Camacho.'},
+{t:'tf',d:2,q:'El Departamento del Trabajo fue creado por Venustiano Carranza en 1911.',a:false,e:'Lo creó Francisco I. Madero el 18 de diciembre de 1911; Carranza lo incorporó a Gobernación en 1915.'},
+{t:'tf',d:2,q:'La prima vacacional mínima es de 50 % del salario de los días de vacaciones.',a:false,e:'La prima vacacional mínima es de 25 %.'},
+{t:'tf',d:3,q:'Los pagos a contratistas sin registro vigente en el REPSE son deducibles y acreditables.',a:false,e:'El SAT y la STPS han advertido que no lo son.'},
+{t:'tf',d:3,q:'La NOM-035 se aplica igual a todos los centros de trabajo sin importar su tamaño.',a:false,e:'Se aplica por escalones: hasta 15, de 16 a 50 y más de 50 personas.'},
+{t:'tf',d:3,q:'La reforma de 2019 hizo obligatoria la conciliación prejudicial antes de demandar.',a:true,e:'También creó el CFCRL y el voto personal, libre y secreto.'},
+{t:'tf',d:3,q:'Las nuevas incorporaciones a Jóvenes Construyendo el Futuro están en pausa hasta enero de 2027.',a:true,e:'Según el anuncio presidencial del 5 de octubre de 2026 (confirma el dato vigente).'},
+{t:'tf',d:3,q:'La reforma de plataformas digitales entró en vigor el 24 de diciembre de 2024.',a:false,e:'Se publicó ese día y entró en vigor el 22 de junio de 2025.'},
+{t:'tf',d:3,q:'La multa general por incumplimientos va de 50 a 5,000 UMA.',a:true,e:'Equivale aproximadamente a $5,866 a $586,550.'},
+{t:'open',d:1,q:'¿Qué es la STPS y para qué sirve?',ideal:'Es la secretaría de Estado, dependiente del Poder Ejecutivo Federal, que diseña y coordina la política laboral federal y vigila que se cumplan el artículo 123 y la LFT: inspección del trabajo, seguridad y salud, empleo, capacitación y diálogo entre personas trabajadoras y empleadoras.',kp:[['Es una secretaría de Estado del Poder Ejecutivo Federal',['secretaria de estado','ejecutivo','dependencia']],['Diseña y coordina la política laboral federal',['politica laboral','laboral federal','coordina']],['Vigila el cumplimiento del artículo 123 y la LFT',['123','ley federal','lft','vigila']]]},
+{t:'open',d:1,q:'Menciona los siete verbos que resumen lo que hace la STPS.',ideal:'Vigilar, equilibrar, emplear, capacitar, proteger, defender y prever.',kp:[['Vigilar',['vigil']],['Equilibrar',['equilibr']],['Emplear',['emple']],['Capacitar',['capacit']],['Proteger',['proteg']],['Defender',['defend']],['Prever',['prever']]]},
+{t:'open',d:1,q:'¿Qué dejó de hacer la STPS con la reforma laboral de 2019?',ideal:'Dejó de resolver juicios (lo hacen los tribunales laborales del Poder Judicial), de conciliar en asuntos federales y de registrar sindicatos y contratos colectivos (lo hace el CFCRL).',kp:[['Ya no resuelve juicios; lo hacen los tribunales laborales',['juicio','tribunal']],['Ya no concilia en asuntos federales',['concili']],['Ya no registra sindicatos ni contratos colectivos (CFCRL)',['registr','sindicat','cfcrl']]]},
+{t:'open',d:2,q:'Explica qué hacen la PROFEDET y el CFCRL.',ideal:'La PROFEDET, órgano desconcentrado de la STPS, asesora, representa y defiende gratuitamente a las personas trabajadoras. El CFCRL, organismo descentralizado, lleva la conciliación prejudicial federal y el registro de sindicatos, contratos colectivos y reglamentos interiores.',kp:[['La PROFEDET asesora, representa y defiende a las personas trabajadoras',['profedet','defiende','asesor']],['El servicio de la PROFEDET es gratuito',['gratuit']],['El CFCRL lleva la conciliación prejudicial federal',['concili']],['El CFCRL registra sindicatos y contratos colectivos',['registr','sindicat']]]},
+{t:'open',d:2,q:'Describe los tipos de inspección del trabajo.',ideal:'Las ordinarias son iniciales, periódicas (por regla general cada 12 meses) y de comprobación; las extraordinarias se ordenan en cualquier momento por accidentes, peligro inminente o denuncias. También hay visitas de asesoría y asistencia técnica y de constatación de datos.',kp:[['Ordinarias: iniciales, periódicas y de comprobación',['ordinaria','inicial','periodica','comprobacion']],['Extraordinarias: por accidentes, peligro inminente o denuncias',['extraordinaria','accidente','peligro','denuncia']],['Las periódicas, por regla general, cada 12 meses',['12 meses','doce meses','cada ano']]]},
+{t:'open',d:2,q:'¿Cómo se aplica la NOM-035 según el tamaño del centro de trabajo?',ideal:'Hasta 15 personas: política de prevención y medidas de control. De 16 a 50: además identificar y analizar los factores de riesgo psicosocial. Más de 50: además evaluar el entorno organizacional. La revisión se repite al menos cada dos años.',kp:[['Hasta 15 personas: política de prevención y medidas de control',['15','politica']],['De 16 a 50: además identificar y analizar factores de riesgo psicosocial',['16','identific','analiz']],['Más de 50: además evaluar el entorno organizacional',['mas de 50','evaluar','entorno']]]},
+{t:'open',d:2,q:'Explica qué prohíbe la reforma de subcontratación de 2021 y cuál es la multa.',ideal:'Prohíbe subcontratar personal. Solo permite servicios u obras especializadas que no formen parte del objeto social ni de la actividad económica preponderante de quien contrata, con un contratista inscrito en el REPSE. La multa va de 2,000 a 50,000 UMA.',kp:[['Prohíbe subcontratar personal',['prohib','subcontrat']],['Solo permite servicios u obras especializadas con contratista inscrito en el REPSE',['especializad','repse']],['Multa de 2,000 a 50,000 UMA',['2000','2 000','50000','50 000']]]},
+{t:'open',d:2,q:'¿Cómo quedó el salario mínimo de 2026?',ideal:'Lo aprobó por consenso el Consejo de Representantes de la CONASAMI el 3 de diciembre de 2025 y rige desde el 1 de enero de 2026: $315.04 diarios en la zona general (+13 %) y $440.87 en la Zona Libre de la Frontera Norte (+5 %).',kp:[['Lo aprobó la CONASAMI (Consejo de Representantes) por consenso',['conasami','consenso','consejo']],['General: $315.04 diarios, aumento de 13 %',['315','13']],['Frontera norte: $440.87 diarios, aumento de 5 %',['440','frontera']]]},
+{t:'open',d:2,q:'Describe el programa Jóvenes Construyendo el Futuro.',ideal:'Es un programa de la STPS para personas de 18 a 29 años que no estudian ni trabajan: capacitación en centros de trabajo hasta por 12 meses, por una sola vez, con apoyo mensual igual al salario mínimo ($9,582.47 en 2026) y seguro médico del IMSS.',kp:[['Personas de 18 a 29 años que no estudian ni trabajan',['18','29','estudian']],['Capacitación en centros de trabajo hasta por 12 meses, una sola vez',['12 meses','capacitacion','una sola vez']],['Apoyo mensual igual al salario mínimo y seguro médico del IMSS',['9582','9 582','salario minimo','imss','seguro']]]},
+{t:'open',d:3,q:'Explica la reforma de las 40 horas y su calendario.',ideal:'La reforma constitucional se publicó el 3 de marzo de 2026 y la de la LFT el 1 de mayo de 2026. Cada 1 de enero, desde 2027, la jornada baja 2 horas por año: de 48 horas en 2026 a 40 en 2030, sin reducir salarios ni prestaciones. Las horas extra suben de 9 a 12 por semana, pagadas al doble, y se conserva un día de descanso por cada seis trabajados.',kp:[['Baja 2 horas por año desde 2027, de 48 a 40 horas en 2030',['48','2030','2 horas']],['Sin reducir salarios ni prestaciones',['salario','prestacion']],['Horas extra de 9 a 12 por semana, pagadas al doble',['12','extra','doble']],['Se conserva un día de descanso por cada seis trabajados',['descanso','seis']]]},
+{t:'open',d:3,q:'Explica el trabajo en plataformas digitales según la reforma.',ideal:'La reforma publicada el 24 de diciembre de 2024 y vigente desde el 22 de junio de 2025 agrega un capítulo a la LFT. Reconoce una relación laboral subordinada de carácter especial para quien obtenga ingresos netos mensuales de al menos un salario mínimo mensual de la Ciudad de México (art. 291-C), con seguridad social integral.',kp:[['Publicada el 24 de diciembre de 2024 y vigente desde el 22 de junio de 2025',['2024','2025','22 de junio']],['Relación laboral subordinada de carácter especial',['subordinad','especial']],['Requiere ingresos netos mensuales de al menos un salario mínimo mensual de la CDMX',['salario minimo','ingresos netos','291']],['Con seguridad social integral',['seguridad social','imss']]]},
+{t:'open',d:3,q:'Cuenta cómo se implementó la reforma laboral de 2019 y el nuevo sistema de justicia.',ideal:'Se publicó el 1 de mayo de 2019. Los tribunales laborales del Poder Judicial sustituyen a las Juntas y la conciliación prejudicial es obligatoria antes de demandar. Se creó el CFCRL y se introdujo el voto personal, libre y secreto para elegir dirigencias y legitimar contratos colectivos. La implementación fue en tres etapas: conciliación desde el 18 de noviembre de 2020, segunda etapa y registro sindical nacional el 3 de noviembre de 2021 y tercera etapa en 2022.',kp:[['Los tribunales laborales sustituyen a las Juntas',['tribunal','juntas']],['Conciliación prejudicial obligatoria antes de demandar',['concili','prejudicial']],['Se crea el CFCRL y el voto personal, libre y secreto',['cfcrl','voto']],['Implementación en tres etapas (2020, 2021 y 2022)',['tres etapas','2020','2021','2022']]]}
+]};
+
+const $=s=>document.querySelector(s);
+const mk=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const sh=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ');
+const NAMES={mc:'Opción múltiple',tf:'Verdadero o falso',open:'Pregunta abierta'},DN=['','fácil','media','difícil'];
+let cur=[],ans=[],hits=[],marks=[],fbs=[],seen=new Set(),warned=false;
+const show=id=>{['setup','exam','res'].forEach(s=>$('#'+s).hidden=s!==id);window.scrollTo(0,0)};
+
+document.title='Simulador: '+BANK.title;
+$('#ttl').textContent='Simulador: '+BANK.title;$('#desc').textContent=BANK.intro;$('#n').max=BANK.q.length;
+
+/* ---- Ajustes y selección de preguntas ---- */
+function pool(){
+  const ty=[...document.querySelectorAll('.types input:checked')].map(x=>x.value),d=+$('#diff').value;
+  return BANK.q.map((q,i)=>({...q,id:i})).filter(q=>ty.includes(q.t)&&(!d||q.d===d));
+}
+function upd(){
+  const p=pool(),n=Math.max(1,+$('#n').value||1);
+  $('#go').disabled=!p.length;
+  $('#avail').textContent=p.length?'Preguntas disponibles con estos ajustes: '+p.length+(n>p.length?'. El examen tendrá '+p.length+'.':'.'):'No hay preguntas con estos ajustes. Elige otro tipo o dificultad.';
+}
+['#n','#diff'].forEach(s=>$(s).addEventListener('input',upd));
+document.querySelectorAll('.types input').forEach(c=>c.addEventListener('change',upd));
+upd();
+
+function startNew(){
+  const p=pool();if(!p.length)return;
+  const n=Math.min(Math.max(1,+$('#n').value||1),p.length);
+  let fresh=p.filter(q=>!seen.has(q.id));
+  if(!fresh.length){p.forEach(q=>seen.delete(q.id));fresh=p}
+  const old=p.filter(q=>!fresh.includes(q));
+  const pick=[...sh(fresh),...sh(old)].slice(0,n);
+  pick.forEach(q=>{seen.add(q.id);if(q.t==='mc')q.po=sh(q.o.map((_,j)=>j))});
+  cur=sh(pick);begin();
+}
+function begin(){ans=[];warned=false;$('#sst').textContent='';draw();show('exam')}
+
+/* ---- Examen ---- */
+function head(q,i,mark){
+  const a=mk('article','q'),l=mk('div'),b=mk('div');
+  l.append(mk('span','num',(i+1)+'.'));if(mark)l.append(mark);
+  b.append(mk('p','kind',NAMES[q.t]+', nivel '+DN[q.d]),mk('p','qt',q.q));
+  a.append(l,b);return[a,b];
+}
+function radio(i,v,txt){
+  const l=mk('label','opt'),r=mk('input');r.type='radio';r.name='q'+i;r.value=v;
+  l.append(r,mk('span','',txt));return l;
+}
+function draw(){
+  const box=$('#qs');box.innerHTML='';
+  cur.forEach((q,i)=>{
+    const [a,b]=head(q,i);
+    if(q.t==='mc')q.po.forEach((j,k)=>b.append(radio(i,k,String.fromCharCode(97+k)+') '+q.o[j])));
+    else if(q.t==='tf'){b.append(radio(i,'true','Verdadero'),radio(i,'false','Falso'))}
+    else{const t=mk('textarea','ruled');t.id='a'+i;t.placeholder='Escribe tu respuesta aquí…';b.append(t)}
+    box.append(a);
+  });
+}
+$('#deliver').onclick=()=>{
+  ans=cur.map((q,i)=>{
+    if(q.t==='open')return($('#a'+i).value||'').trim();
+    const c=document.querySelector('input[name="q'+i+'"]:checked');return c?c.value:null;
+  });
+  const un=ans.filter((a,i)=>cur[i].t==='open'?!a:a===null).length;
+  if(un&&!warned){warned=true;$('#sst').textContent='Te faltan '+un+' pregunta(s) sin responder. Pulsa otra vez para entregar de todos modos.';return}
+  hits=cur.map((q,i)=>{if(q.t!=='open')return null;const na=norm(ans[i]);return q.kp.map(k=>k[1].some(w=>na.includes(w)))});
+  results();
+};
+
+/* ---- Corrección ---- */
+function score(i){
+  const q=cur[i];
+  if(q.t==='mc')return ans[i]!==null&&q.po[+ans[i]]===q.a?1:0;
+  if(q.t==='tf')return ans[i]!==null&&(ans[i]==='true')===q.a?1:0;
+  return hits[i].filter(Boolean).length/hits[i].length;
+}
+function results(){
+  const rv=$('#rv');rv.innerHTML='';marks=[];fbs=[];
+  cur.forEach((q,i)=>{
+    const mark=mk('span','mark');marks[i]=mark;
+    const [a,b]=head(q,i,mark);
+    if(q.t==='mc'){
+      q.po.forEach((j,k)=>{
+        const l=mk('div','opt n'+(j===q.a?' c':(ans[i]!==null&&+ans[i]===k)?' w':''));
+        l.append(mk('span','',String.fromCharCode(97+k)+') '+q.o[j]));b.append(l);
+      });
+    }else if(q.t==='tf'){
+      [[true,'Verdadero'],[false,'Falso']].forEach(([v,t])=>{
+        const l=mk('div','opt n'+(v===q.a?' c':(ans[i]!==null&&(ans[i]==='true')===v)?' w':''));
+        l.append(mk('span','',t));b.append(l);
+      });
+    }else{
+      const x=mk('p','ans');x.append(mk('b','','Tu respuesta'),document.createTextNode(ans[i]||'(sin respuesta)'));
+      const y=mk('p','ans');y.append(mk('b','','Respuesta esperada'),document.createTextNode(q.ideal));
+      b.append(x,y,mk('p','kind','Puntos clave: ya marcamos los que detectamos en tu texto. Corrige si hace falta.'));
+      q.kp.forEach((k,j)=>{
+        const l=mk('label','opt kp'),c=mk('input');c.type='checkbox';c.checked=hits[i][j];
+        c.onchange=()=>{hits[i][j]=c.checked;refresh()};
+        l.append(c,mk('span','',k[0]));b.append(l);
+      });
+    }
+    if(q.t!=='open'&&ans[i]===null)b.append(mk('p','kind','Sin responder'));
+    if(q.e){const f=mk('p','fb',q.e);fbs[i]=f;b.append(f)}
+    rv.append(a);
+  });
+  refresh();show('res');
+}
+function refresh(){
+  let pts=0,ok=0;
+  cur.forEach((q,i)=>{
+    const s=score(i),cls=s>=.7?'ok':s>0?'part':'bad';
+    pts+=s;if(s>=.7)ok++;
+    marks[i].className='mark '+cls;
+    marks[i].textContent=q.t==='open'?hits[i].filter(Boolean).length+'/'+hits[i].length:(s?'✓':'✗');
+    if(fbs[i])fbs[i].className='fb '+cls;
+  });
+  $('#pct').textContent=Math.round(pts/cur.length*100)+'%';
+  $('#sum').textContent=pts.toFixed(1).replace(/\.0$/,'')+' puntos de '+cur.length+'. Resolviste bien '+ok+' preguntas.';
+}
+$('#go').onclick=startNew;
+$('#fresh').onclick=startNew;
+$('#same').onclick=begin;
+$('#chg').onclick=$('#back1').onclick=()=>show('setup');
+</script>
+</body>
+</html>
